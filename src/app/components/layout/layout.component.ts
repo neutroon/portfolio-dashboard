@@ -41,7 +41,7 @@ import { MatMenuModule } from '@angular/material/menu';
           <h2>Portfolio</h2>
         </div>
         <mat-nav-list>
-          <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+          <a mat-list-item routerLink="overview" routerLinkActive="active">
             <div class="nav-item-content">
               <div class="icon-wrapper">
                 <mat-icon>dashboard</mat-icon>
@@ -49,7 +49,11 @@ import { MatMenuModule } from '@angular/material/menu';
               <span>Dashboard</span>
             </div>
           </a>
-          <a mat-list-item routerLink="/projects" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/dashboard/projects"
+            routerLinkActive="active"
+          >
             <div class="nav-item-content">
               <div class="icon-wrapper">
                 <mat-icon>work</mat-icon>
@@ -57,7 +61,11 @@ import { MatMenuModule } from '@angular/material/menu';
               <span>Projects</span>
             </div>
           </a>
-          <a mat-list-item routerLink="/analytics" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/dashboard/analytics"
+            routerLinkActive="active"
+          >
             <div class="nav-item-content">
               <div class="icon-wrapper">
                 <mat-icon>analytics</mat-icon>
@@ -65,7 +73,11 @@ import { MatMenuModule } from '@angular/material/menu';
               <span>Analytics</span>
             </div>
           </a>
-          <a mat-list-item routerLink="/settings" routerLinkActive="active">
+          <a
+            mat-list-item
+            routerLink="/dashboard/settings"
+            routerLinkActive="active"
+          >
             <div class="nav-item-content">
               <div class="icon-wrapper">
                 <mat-icon>settings</mat-icon>
