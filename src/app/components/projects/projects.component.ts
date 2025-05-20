@@ -1,10 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AddProjectDialogComponent } from './add-project-dialog/add-project-dialog.component';
+
+interface Project {
+  title: string;
+  description: string;
+  imageUrl: string;
+  technologies: string[];
+  stats: {
+    views: number;
+    rating: number;
+  };
+  createdAt: Date;
+  featured?: boolean;
+}
 
 @Component({
   selector: 'app-projects',
@@ -16,6 +31,8 @@ import { MatMenuModule } from '@angular/material/menu';
     MatButtonModule,
     MatChipsModule,
     MatMenuModule,
+    MatDialogModule,
+    AddProjectDialogComponent,
   ],
   template: `
     <div class="projects-container">
@@ -24,7 +41,12 @@ import { MatMenuModule } from '@angular/material/menu';
           <h1>My Projects</h1>
           <p class="subtitle">Showcasing my latest work and achievements</p>
         </div>
-        <button mat-raised-button class="add-project-btn">
+        <button
+          mat-raised-button
+          class="add-project-btn"
+          (click)="openAddProjectDialog()"
+          type="button"
+        >
           <mat-icon>add</mat-icon>
           New Project
         </button>
@@ -32,9 +54,12 @@ import { MatMenuModule } from '@angular/material/menu';
 
       <div class="projects-grid">
         <!-- Featured Project -->
-        <mat-card class="project-card featured">
+        <mat-card *ngIf="featuredProject" class="project-card featured">
           <div class="project-image">
-            <img src="https://picsum.photos/800/400" alt="Featured Project" />
+            <img
+              [src]="featuredProject.imageUrl"
+              [alt]="featuredProject.title"
+            />
             <div class="featured-badge">
               <mat-icon>star</mat-icon>
               Featured
@@ -42,130 +67,57 @@ import { MatMenuModule } from '@angular/material/menu';
           </div>
           <mat-card-content>
             <div class="project-header">
-              <h2>E-commerce Platform</h2>
+              <h2>{{ featuredProject.title }}</h2>
               <button mat-icon-button [matMenuTriggerFor]="projectMenu">
                 <mat-icon>more_vert</mat-icon>
               </button>
             </div>
-            <p class="project-description">
-              A full-stack e-commerce platform with real-time inventory
-              management, payment processing, and analytics dashboard.
-            </p>
+            <p class="project-description">{{ featuredProject.description }}</p>
             <div class="project-stats">
               <div class="stat">
                 <mat-icon>visibility</mat-icon>
-                <span>2.5k views</span>
+                <span>{{ featuredProject.stats.views }} views</span>
               </div>
               <div class="stat">
                 <mat-icon>star</mat-icon>
-                <span>4.9 rating</span>
-              </div>
-              <div class="stat">
-                <mat-icon>code</mat-icon>
-                <span>15k lines</span>
+                <span>{{ featuredProject.stats.rating }} rating</span>
               </div>
             </div>
             <div class="project-tags">
-              <mat-chip>Angular</mat-chip>
-              <mat-chip>Node.js</mat-chip>
-              <mat-chip>MongoDB</mat-chip>
+              <mat-chip *ngFor="let tech of featuredProject.technologies">{{
+                tech
+              }}</mat-chip>
             </div>
           </mat-card-content>
         </mat-card>
 
         <!-- Regular Projects -->
-        <mat-card class="project-card">
+        <mat-card *ngFor="let project of regularProjects" class="project-card">
           <div class="project-image">
-            <img src="https://picsum.photos/800/401" alt="Project" />
+            <img [src]="project.imageUrl" [alt]="project.title" />
           </div>
           <mat-card-content>
             <div class="project-header">
-              <h2>Portfolio Dashboard</h2>
+              <h2>{{ project.title }}</h2>
               <button mat-icon-button [matMenuTriggerFor]="projectMenu">
                 <mat-icon>more_vert</mat-icon>
               </button>
             </div>
-            <p class="project-description">
-              A modern portfolio dashboard with analytics, project management,
-              and real-time updates.
-            </p>
+            <p class="project-description">{{ project.description }}</p>
             <div class="project-stats">
               <div class="stat">
                 <mat-icon>visibility</mat-icon>
-                <span>1.2k views</span>
+                <span>{{ project.stats.views }} views</span>
               </div>
               <div class="stat">
                 <mat-icon>star</mat-icon>
-                <span>4.8 rating</span>
+                <span>{{ project.stats.rating }} rating</span>
               </div>
             </div>
             <div class="project-tags">
-              <mat-chip>Angular</mat-chip>
-              <mat-chip>Material</mat-chip>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="project-card">
-          <div class="project-image">
-            <img src="https://picsum.photos/800/402" alt="Project" />
-          </div>
-          <mat-card-content>
-            <div class="project-header">
-              <h2>Task Management App</h2>
-              <button mat-icon-button [matMenuTriggerFor]="projectMenu">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-            </div>
-            <p class="project-description">
-              A collaborative task management application with real-time updates
-              and team features.
-            </p>
-            <div class="project-stats">
-              <div class="stat">
-                <mat-icon>visibility</mat-icon>
-                <span>800 views</span>
-              </div>
-              <div class="stat">
-                <mat-icon>star</mat-icon>
-                <span>4.7 rating</span>
-              </div>
-            </div>
-            <div class="project-tags">
-              <mat-chip>React</mat-chip>
-              <mat-chip>Firebase</mat-chip>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="project-card">
-          <div class="project-image">
-            <img src="https://picsum.photos/800/403" alt="Project" />
-          </div>
-          <mat-card-content>
-            <div class="project-header">
-              <h2>Weather Dashboard</h2>
-              <button mat-icon-button [matMenuTriggerFor]="projectMenu">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-            </div>
-            <p class="project-description">
-              A weather dashboard with real-time updates, forecasts, and
-              location tracking.
-            </p>
-            <div class="project-stats">
-              <div class="stat">
-                <mat-icon>visibility</mat-icon>
-                <span>500 views</span>
-              </div>
-              <div class="stat">
-                <mat-icon>star</mat-icon>
-                <span>4.6 rating</span>
-              </div>
-            </div>
-            <div class="project-tags">
-              <mat-chip>Vue.js</mat-chip>
-              <mat-chip>OpenWeather</mat-chip>
+              <mat-chip *ngFor="let tech of project.technologies">{{
+                tech
+              }}</mat-chip>
             </div>
           </mat-card-content>
         </mat-card>
@@ -475,6 +427,81 @@ import { MatMenuModule } from '@angular/material/menu';
     `,
   ],
 })
-export class ProjectsComponent {
-  // Add any component logic here
+export class ProjectsComponent implements OnInit {
+  projects: Project[] = [];
+  featuredProject: Project | null = null;
+  regularProjects: Project[] = [];
+
+  constructor(private dialog: MatDialog) {
+    console.log('ProjectsComponent constructor called');
+  }
+
+  ngOnInit() {
+    console.log('ProjectsComponent initialized');
+    // Initialize with some sample projects
+    this.projects = [
+      {
+        title: 'E-commerce Platform',
+        description:
+          'A full-stack e-commerce platform with real-time inventory management, payment processing, and analytics dashboard.',
+        imageUrl: 'https://picsum.photos/800/400',
+        technologies: ['Angular', 'Node.js', 'MongoDB'],
+        stats: { views: 2500, rating: 4.9 },
+        createdAt: new Date(),
+        featured: true,
+      },
+      {
+        title: 'Portfolio Dashboard',
+        description:
+          'A modern portfolio dashboard with analytics, project management, and real-time updates.',
+        imageUrl: 'https://picsum.photos/800/401',
+        technologies: ['Angular', 'Material'],
+        stats: { views: 1200, rating: 4.8 },
+        createdAt: new Date(),
+      },
+      {
+        title: 'Task Management App',
+        description:
+          'A collaborative task management application with real-time updates and team features.',
+        imageUrl: 'https://picsum.photos/800/402',
+        technologies: ['React', 'Firebase'],
+        stats: { views: 800, rating: 4.7 },
+        createdAt: new Date(),
+      },
+      {
+        title: 'Weather Dashboard',
+        description:
+          'A weather dashboard with real-time updates, forecasts, and location tracking.',
+        imageUrl: 'https://picsum.photos/800/403',
+        technologies: ['Vue.js', 'OpenWeather'],
+        stats: { views: 500, rating: 4.6 },
+        createdAt: new Date(),
+      },
+    ];
+
+    this.updateProjectLists();
+  }
+
+  updateProjectLists(): void {
+    this.featuredProject = this.projects.find((p) => p.featured) || null;
+    this.regularProjects = this.projects.filter((p) => !p.featured);
+  }
+
+  openAddProjectDialog(): void {
+    console.log('openAddProjectDialog called');
+    const dialogRef = this.dialog.open(AddProjectDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      panelClass: 'custom-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log('Dialog closed with result:', result);
+      if (result) {
+        // Add the new project
+        this.projects.unshift(result);
+        this.updateProjectLists();
+      }
+    });
+  }
 }
