@@ -3,6 +3,13 @@ import { LayoutComponent } from './components/layout/layout.component';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./components/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
+  },
+  {
     path: '',
     component: LayoutComponent,
     children: [
@@ -34,6 +41,7 @@ export const routes: Routes = [
             (m) => m.SettingsComponent
           ),
       },
+
       {
         path: '',
         redirectTo: 'dashboard',

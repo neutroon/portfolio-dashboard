@@ -6,19 +6,21 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AddProjectDialogComponent } from './add-project-dialog/add-project-dialog.component';
+import { AuthService } from '../../services/auth.service';
 
 interface Project {
+  _id?: string;
   title: string;
   description: string;
   imageUrl: string;
   technologies: string[];
-  stats: {
-    views: number;
-    rating: number;
-  };
-  createdAt: Date;
-  featured?: boolean;
+  liveUrl?: string;
+  githubUrl?: string;
+  featured: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 @Component({
@@ -32,7 +34,6 @@ interface Project {
     MatChipsModule,
     MatMenuModule,
     MatDialogModule,
-    AddProjectDialogComponent,
   ],
   template: `
     <div class="projects-container">
@@ -73,16 +74,6 @@ interface Project {
               </button>
             </div>
             <p class="project-description">{{ featuredProject.description }}</p>
-            <div class="project-stats">
-              <div class="stat">
-                <mat-icon>visibility</mat-icon>
-                <span>{{ featuredProject.stats.views }} views</span>
-              </div>
-              <div class="stat">
-                <mat-icon>star</mat-icon>
-                <span>{{ featuredProject.stats.rating }} rating</span>
-              </div>
-            </div>
             <div class="project-tags">
               <mat-chip *ngFor="let tech of featuredProject.technologies">{{
                 tech
@@ -104,16 +95,6 @@ interface Project {
               </button>
             </div>
             <p class="project-description">{{ project.description }}</p>
-            <div class="project-stats">
-              <div class="stat">
-                <mat-icon>visibility</mat-icon>
-                <span>{{ project.stats.views }} views</span>
-              </div>
-              <div class="stat">
-                <mat-icon>star</mat-icon>
-                <span>{{ project.stats.rating }} rating</span>
-              </div>
-            </div>
             <div class="project-tags">
               <mat-chip *ngFor="let tech of project.technologies">{{
                 tech
@@ -283,26 +264,6 @@ interface Project {
         margin-bottom: 16px;
       }
 
-      .project-stats {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 16px;
-      }
-
-      .stat {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-      }
-
-      .stat mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-
       .project-tags {
         display: flex;
         flex-wrap: wrap;
@@ -431,55 +392,38 @@ export class ProjectsComponent implements OnInit {
   projects: Project[] = [];
   featuredProject: Project | null = null;
   regularProjects: Project[] = [];
+  private readonly API_URL = 'http://localhost:5000/api';
 
-  constructor(private dialog: MatDialog) {
-    console.log('ProjectsComponent constructor called');
-  }
+  constructor(
+    private dialog: MatDialog,
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    console.log('ProjectsComponent initialized');
-    // Initialize with some sample projects
-    this.projects = [
-      {
-        title: 'E-commerce Platform',
-        description:
-          'A full-stack e-commerce platform with real-time inventory management, payment processing, and analytics dashboard.',
-        imageUrl: 'https://picsum.photos/800/400',
-        technologies: ['Angular', 'Node.js', 'MongoDB'],
-        stats: { views: 2500, rating: 4.9 },
-        createdAt: new Date(),
-        featured: true,
-      },
-      {
-        title: 'Portfolio Dashboard',
-        description:
-          'A modern portfolio dashboard with analytics, project management, and real-time updates.',
-        imageUrl: 'https://picsum.photos/800/401',
-        technologies: ['Angular', 'Material'],
-        stats: { views: 1200, rating: 4.8 },
-        createdAt: new Date(),
-      },
-      {
-        title: 'Task Management App',
-        description:
-          'A collaborative task management application with real-time updates and team features.',
-        imageUrl: 'https://picsum.photos/800/402',
-        technologies: ['React', 'Firebase'],
-        stats: { views: 800, rating: 4.7 },
-        createdAt: new Date(),
-      },
-      {
-        title: 'Weather Dashboard',
-        description:
-          'A weather dashboard with real-time updates, forecasts, and location tracking.',
-        imageUrl: 'https://picsum.photos/800/403',
-        technologies: ['Vue.js', 'OpenWeather'],
-        stats: { views: 500, rating: 4.6 },
-        createdAt: new Date(),
-      },
-    ];
+    this.loadProjects();
+  }
 
-    this.updateProjectLists();
+  private loadProjects(): void {
+    const token = localStorage.getItem('dashboard_token');
+    if (!token) {
+      console.error('No authentication token found');
+      return;
+    }
+
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .get<Project[]>(`${this.API_URL}/projects`, { headers })
+      .subscribe({
+        next: (projects) => {
+          this.projects = projects;
+          this.updateProjectLists();
+        },
+        error: (error) => {
+          console.error('Error loading projects:', error);
+        },
+      });
   }
 
   updateProjectLists(): void {
@@ -488,7 +432,6 @@ export class ProjectsComponent implements OnInit {
   }
 
   openAddProjectDialog(): void {
-    console.log('openAddProjectDialog called');
     const dialogRef = this.dialog.open(AddProjectDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
@@ -496,11 +439,29 @@ export class ProjectsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('Dialog closed with result:', result);
       if (result) {
-        // Add the new project
-        this.projects.unshift(result);
-        this.updateProjectLists();
+        const token = localStorage.getItem('dashboard_token');
+        if (!token) {
+          console.error('No authentication token found');
+          return;
+        }
+
+        const headers = new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${token}`
+        );
+
+        this.http
+          .post<Project>(`${this.API_URL}/projects`, result, { headers })
+          .subscribe({
+            next: (newProject) => {
+              this.projects.unshift(newProject);
+              this.updateProjectLists();
+            },
+            error: (error) => {
+              console.error('Error adding project:', error);
+            },
+          });
       }
     });
   }

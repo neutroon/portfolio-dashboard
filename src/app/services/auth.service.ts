@@ -10,12 +10,24 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 })
 export class AuthService {
   private readonly TOKEN_KEY = 'dashboard_token';
-  private readonly API_URL = 'http://localhost:3000/api';
+  private readonly API_URL = 'http://localhost:5000/api';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   private jwtHelper = new JwtHelperService();
 
   constructor(private http: HttpClient, private router: Router) {
     this.checkAuthStatus();
+  }
+
+  private checkAuthStatus(): void {
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    if (token && !this.jwtHelper.isTokenExpired(token)) {
+      this.isAuthenticatedSubject.next(true);
+    } else {
+      this.isAuthenticatedSubject.next(false);
+      if (token) {
+        localStorage.removeItem(this.TOKEN_KEY);
+      }
+    }
   }
 
   get isAuthenticated$(): Observable<boolean> {
